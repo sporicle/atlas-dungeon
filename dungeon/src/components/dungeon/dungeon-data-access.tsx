@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
+import { useTransactionContext } from './transaction-context'
 
 export function useAtlasDungeonProgram() {
   const { connection } = useConnection()
@@ -16,6 +17,7 @@ export function useAtlasDungeonProgram() {
   const provider = useAnchorProvider()
   const programId = useMemo(() => getAtlasDungeonProgramId(cluster.network as Cluster), [cluster])
   const program = getAtlasDungeonProgram(provider)
+  const { addTransaction } = useTransactionContext()
 
   const accounts = useQuery({
     queryKey: ['atlas-dungeon', 'all', { cluster }],
@@ -29,8 +31,15 @@ export function useAtlasDungeonProgram() {
 
   const initialize = useMutation({
     mutationKey: ['atlas-dungeon', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ playerState: keypair.publicKey, user: provider.wallet.publicKey }).signers([keypair]).rpc(),
+    mutationFn: async (keypair: Keypair) => {
+      const signature = await program.methods
+        .initialize()
+        .accounts({ playerState: keypair.publicKey, user: provider.wallet.publicKey })
+        .signers([keypair])
+        .rpc()
+      addTransaction(signature)
+      return signature
+    },
     onSuccess: (signature) => {
       transactionToast(signature)
       return accounts.refetch()
@@ -51,6 +60,7 @@ export function useAtlasDungeonProgramAccount({ account }: { account: PublicKey 
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
   const { program, accounts } = useAtlasDungeonProgram()
+  const { addTransaction } = useTransactionContext()
 
   const accountQuery = useQuery({
     queryKey: ['atlas-dungeon', 'fetch', { cluster, account }],
@@ -59,9 +69,13 @@ export function useAtlasDungeonProgramAccount({ account }: { account: PublicKey 
 
   const clickMutation = useMutation({
     mutationKey: ['atlas-dungeon', 'click', { cluster, account }],
-    mutationFn: () => program.methods.click().accounts({ playerState: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
+    mutationFn: async () => {
+      const signature = await program.methods.click().accounts({ playerState: account }).rpc()
+      addTransaction(signature)
+      return signature
+    },
+    onSuccess: (signature) => {
+      transactionToast(signature)
       return accountQuery.refetch()
     },
   })
