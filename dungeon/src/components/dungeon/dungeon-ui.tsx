@@ -56,7 +56,7 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
     account,
   })
 
-  // const coins = useMemo(() => accountQuery.data?.coins ?? 0, [accountQuery.data?.coins])
+  const coins = useMemo(() => accountQuery.data?.coins ?? 0, [accountQuery.data?.coins])
 
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
@@ -65,7 +65,7 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
       <div className="card-body items-center text-center">
         <div className="space-y-6">
           <h2 className="card-title justify-center text-3xl cursor-pointer" onClick={() => accountQuery.refetch()}>
-            {/* {coins.toNumber()} Coins */}
+            {coins.toString()} Coins
           </h2>
           <div className="card-actions justify-around">
             <button
