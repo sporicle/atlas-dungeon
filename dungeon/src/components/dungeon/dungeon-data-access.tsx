@@ -5,10 +5,11 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { useMemo } from 'react'
 import toast from 'react-hot-toast'
-import { useCluster } from '../cluster/cluster-data-access'
+import { ClusterNetwork, useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
 import { useTransactionContext } from './transaction-context'
+import { BN } from '@coral-xyz/anchor'
 
 export function useAtlasDungeonProgram() {
   const { connection } = useConnection()
@@ -21,7 +22,32 @@ export function useAtlasDungeonProgram() {
 
   const accounts = useQuery({
     queryKey: ['atlas-dungeon', 'all', { cluster }],
-    queryFn: () => program.account.playerState.all(),
+    queryFn: async () => {
+      if (cluster.network === ClusterNetwork.Atlas) {
+        const response = await connection.getProgramAccounts(programId, {
+          filters: [
+            {
+              dataSize: 64,
+            },
+          ],
+        })
+        return response.map(({ pubkey, account }) => {
+          const decodedData = {
+            player: new PublicKey(account.data.slice(8, 40)),
+            coins: new BN(account.data.slice(40, 48), 'le'),
+            workers: new BN(account.data.slice(48, 56), 'le'),
+            lastClickTime: new BN(account.data.slice(56, 64), 'le'),
+          }
+
+          return {
+            publicKey: pubkey,
+            account: decodedData,
+          }
+        })
+      } else {
+        return program.account.playerState.all()
+      }
+    },
   })
 
   const getProgramAccount = useQuery({
