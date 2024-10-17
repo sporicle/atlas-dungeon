@@ -17,6 +17,7 @@ export enum ClusterNetwork {
   Testnet = 'testnet',
   Devnet = 'devnet',
   Custom = 'custom',
+  Atlas = 'atlas',
 }
 
 // By default, we don't configure the mainnet-beta cluster
@@ -33,6 +34,11 @@ export const defaultClusters: Cluster[] = [
     name: 'testnet',
     endpoint: clusterApiUrl('testnet'),
     network: ClusterNetwork.Testnet,
+  },
+  {
+    name: 'Atlas',
+    endpoint: `https://testnet.atlas.xyz/?apikey=${import.meta.env.VITE_ATLAS_API_KEY}`,
+    network: ClusterNetwork.Atlas,
   },
 ]
 
@@ -106,6 +112,9 @@ function getClusterUrlParam(cluster: Cluster): string {
       break
     case ClusterNetwork.Testnet:
       suffix = 'testnet'
+      break
+    case ClusterNetwork.Atlas:
+      suffix = 'custom&customUrl=' + encodeURIComponent(cluster.endpoint)
       break
     default:
       suffix = `custom&customUrl=${encodeURIComponent(cluster.endpoint)}`

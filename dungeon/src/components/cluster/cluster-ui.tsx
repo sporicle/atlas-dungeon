@@ -119,6 +119,7 @@ export function ClusterUiModal({ hideModal, show }: { hideModal: () => void; sho
         <option value={ClusterNetwork.Devnet}>Devnet</option>
         <option value={ClusterNetwork.Testnet}>Testnet</option>
         <option value={ClusterNetwork.Mainnet}>Mainnet</option>
+        <option value={ClusterNetwork.Atlas}>Atlas</option>
       </select>
     </AppModal>
   )
