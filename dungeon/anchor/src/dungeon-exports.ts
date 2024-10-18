@@ -21,7 +21,7 @@ export function getAtlasDungeonProgramId(cluster: Cluster) {
     case 'devnet':
     case 'testnet':
       // This is the program ID for the Dungeon program on devnet and testnet.
-      return new PublicKey('EioKfWZqL5cnvBCSMnDSdVUhUSG35qDo6M1fb2UTcMqH')
+      return new PublicKey('EsQ7uzLEkipUf8eWCshSGnVHnNZnwF3pJ4eBf1ziSvJm')
     case 'mainnet-beta':
     default:
       return ATLAS_DUNGEON_PROGRAM_ID

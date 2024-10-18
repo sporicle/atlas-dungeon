@@ -2,7 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { AtlasDungeon } from "../target/types/atlas_dungeon";
 import { expect } from "chai";
-
+import { BN } from "bn.js";
 describe("atlas-dungeon", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
@@ -12,7 +12,7 @@ describe("atlas-dungeon", () => {
 
   it("Is initialized!", async () => {
     const tx = await program.methods
-      .initialize()
+      .initialize(new BN(0),new BN(0),new BN(0),new BN(0),new BN(0))
       .accounts({ playerState: playerState.publicKey })
       .signers([playerState])
       .rpc();
@@ -20,6 +20,12 @@ describe("atlas-dungeon", () => {
     const account = await program.account.playerState.fetch(playerState.publicKey);
     expect(account.coins.toNumber()).to.equal(0);
     expect(account.workers.toNumber()).to.equal(0);
+    expect(account.class.toNumber()).to.equal(0);
+    expect(account.experience.toNumber()).to.equal(0);
+    expect(account.strength.toNumber()).to.equal(0);
+    expect(account.intelligence.toNumber()).to.equal(0);
+    expect(account.dexterity.toNumber()).to.equal(0);
+    expect(account.luck.toNumber()).to.equal(0);
     expect(account.lastClickTime.toNumber()).to.equal(0);
   });
 
@@ -30,7 +36,7 @@ describe("atlas-dungeon", () => {
       .rpc();
 
     const account = await program.account.playerState.fetch(playerState.publicKey);
-    expect(account.coins.toNumber()).to.equal(1);
+    expect(account.experience.toNumber()).to.equal(1);
     expect(account.lastClickTime).to.not.equal(0);
   });
 });

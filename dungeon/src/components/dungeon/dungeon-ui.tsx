@@ -56,31 +56,54 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
     account,
   })
 
-  const coins = useMemo(() => accountQuery.data?.coins ?? 0, [accountQuery.data?.coins])
-
+  const exp = useMemo(() => accountQuery.data?.experience ?? 0, [accountQuery.data?.experience])
+  const strength = useMemo(() => accountQuery.data?.strength ?? 0, [accountQuery.data?.strength])
+  const intelligence = useMemo(() => accountQuery.data?.intelligence ?? 0, [accountQuery.data?.intelligence])
+  const dexterity = useMemo(() => accountQuery.data?.dexterity ?? 0, [accountQuery.data?.dexterity])
+  const luck = useMemo(() => accountQuery.data?.luck ?? 0, [accountQuery.data?.luck])
+  const playerClass = useMemo(() => accountQuery.data?.class ?? 0, [accountQuery.data?.class])
+console.log(accountQuery.data)
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
   ) : (
-    <div className="card card-bordered border-base-300 border-4 text-neutral-content">
-      <div className="card-body items-center text-center">
-        <div className="space-y-6">
-          <h2 className="card-title justify-center text-3xl cursor-pointer" onClick={() => accountQuery.refetch()}>
-            {coins.toString()} Coins
+    <div className="card bg-base-200 shadow-xl">
+      <div className="card-body p-6">
+        <div className="flex flex-col items-center space-y-4">
+          <h2 className="card-title text-2xl font-bold">
+            Class {playerClass.toString()}
           </h2>
-          <div className="card-actions justify-around">
-            <button
-              className="btn btn-xs lg:btn-md btn-primary"
-              onClick={() => clickMutation.mutateAsync()}
-              disabled={clickMutation.isPending}
-            >
-              Click {clickMutation.isPending && '...'}
-            </button>
+          <p className="text-xl font-semibold">{exp.toString()} EXP</p>
+          
+          <div className="flex justify-between w-full text-center">
+            <div>
+              <p className="text-sm font-medium">STR</p>
+              <p className="text-lg font-bold">{strength.toString()}</p>
+            </div>  
+            <div>
+              <p className="text-sm font-medium">INT</p>
+              <p className="text-lg font-bold">{intelligence.toString()}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">DEX</p>
+              <p className="text-lg font-bold">{dexterity.toString()}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">LCK</p>
+              <p className="text-lg font-bold">{luck.toString()}</p>
+            </div>
           </div>
-          <div className="text-center space-y-4">
-            <p>
-              <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
-            </p>
-          </div>
+
+          <button
+            className="btn btn-primary w-full"
+            onClick={() => clickMutation.mutateAsync()}
+            disabled={clickMutation.isPending}
+          >
+            Click {clickMutation.isPending && '...'}
+          </button>
+
+          <p className="text-sm">
+            <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
+          </p>
         </div>
       </div>
     </div>

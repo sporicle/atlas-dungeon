@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-dungeon = "EioKfWZqL5cnvBCSMnDSdVUhUSG35qDo6M1fb2UTcMqH"
+dungeon = "EsQ7uzLEkipUf8eWCshSGnVHnNZnwF3pJ4eBf1ziSvJm"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

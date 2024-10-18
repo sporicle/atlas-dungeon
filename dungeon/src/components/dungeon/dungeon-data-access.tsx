@@ -27,7 +27,7 @@ export function useAtlasDungeonProgram() {
         const response = await connection.getProgramAccounts(programId, {
           filters: [
             {
-              dataSize: 64,
+              dataSize: 88,
             },
           ],
         })
@@ -37,6 +37,12 @@ export function useAtlasDungeonProgram() {
             coins: new BN(account.data.slice(40, 48), 'le'),
             workers: new BN(account.data.slice(48, 56), 'le'),
             lastClickTime: new BN(account.data.slice(56, 64), 'le'),
+            class: new BN(account.data.slice(64, 68), 'le'),
+            experience: new BN(account.data.slice(68, 72), 'le'),
+            strength: new BN(account.data.slice(72, 76), 'le'),
+            intelligence: new BN(account.data.slice(76, 80), 'le'),
+            dexterity: new BN(account.data.slice(80, 84), 'le'),
+            luck: new BN(account.data.slice(84, 88), 'le'),
           }
 
           return {
@@ -59,7 +65,7 @@ export function useAtlasDungeonProgram() {
     mutationKey: ['atlas-dungeon', 'initialize', { cluster }],
     mutationFn: async (keypair: Keypair) => {
       const signature = await program.methods
-        .initialize()
+        .initialize(new BN(Math.floor(Math.random() * 4)), new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5))
         .accounts({ playerState: keypair.publicKey, user: provider.wallet.publicKey })
         .signers([keypair])
         .rpc()
