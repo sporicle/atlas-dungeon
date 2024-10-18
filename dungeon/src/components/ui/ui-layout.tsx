@@ -2,11 +2,10 @@ import { ReactNode, Suspense, useEffect, useRef } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { Link, useLocation } from 'react-router-dom'
 
-import { AccountChecker } from '../account/account-ui'
 import { ClusterChecker, ClusterUiSelect, ExplorerLink } from '../cluster/cluster-ui'
 import { WalletButton } from '../solana/solana-provider'
 
-export function UiLayout({ children, links }: { children: ReactNode; links: { label: string; path: string }[] }) {
+export function UiLayout({ children }: { children: ReactNode }) {
   const pathname = useLocation().pathname
 
   return (
@@ -17,13 +16,11 @@ export function UiLayout({ children, links }: { children: ReactNode; links: { la
             <img className="h-4 md:h-6" alt="Logo" src="/logo.png" />
           </Link>
           <ul className="menu menu-horizontal px-1 space-x-2">
-            {links.map(({ label, path }) => (
-              <li key={path}>
-                <Link className={pathname.startsWith(path) ? 'active' : ''} to={path}>
-                  {label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link className={pathname.startsWith('/dashboard') ? 'active' : ''} to="/dashboard">
+                Dungeon
+              </Link>
+            </li>
           </ul>
         </div>
         <div className="flex-none space-x-2">
@@ -32,7 +29,7 @@ export function UiLayout({ children, links }: { children: ReactNode; links: { la
         </div>
       </div>
       <ClusterChecker>
-        <AccountChecker />
+        {/* Remove AccountChecker from here */}
       </ClusterChecker>
       <div className="flex-grow mx-4 lg:mx-auto">
         <Suspense

@@ -91,7 +91,7 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
   ) : (
-    <div className="card bg-base-200 shadow-xl p-3 w-[250px]">
+    <div className="card bg-base-200 shadow-xl p-3 w-[200px]">
       <div className="flex flex-col items-center">
         {getClassImage(parseInt(playerClass.toString()))}
         <h2 className="card-title text-lg font-bold mt-2">
