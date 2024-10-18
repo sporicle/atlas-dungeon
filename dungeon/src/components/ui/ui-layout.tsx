@@ -2,7 +2,7 @@ import { ReactNode, Suspense, useEffect, useRef } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { Link, useLocation } from 'react-router-dom'
 
-import { ClusterChecker, ClusterUiSelect, ExplorerLink } from '../cluster/cluster-ui'
+import { ClusterUiSelect, ExplorerLink } from '../cluster/cluster-ui'
 import { WalletButton } from '../solana/solana-provider'
 
 export function UiLayout({ children }: { children: ReactNode }) {
@@ -28,9 +28,6 @@ export function UiLayout({ children }: { children: ReactNode }) {
           <ClusterUiSelect />
         </div>
       </div>
-      <ClusterChecker>
-        {/* Remove AccountChecker from here */}
-      </ClusterChecker>
       <div className="flex-grow mx-4 lg:mx-auto">
         <Suspense
           fallback={
