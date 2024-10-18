@@ -65,7 +65,7 @@ export function useAtlasDungeonProgram() {
     mutationKey: ['atlas-dungeon', 'initialize', { cluster }],
     mutationFn: async (keypair: Keypair) => {
       const signature = await program.methods
-        .initialize(new BN(Math.floor(Math.random() * 4)), new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5))
+        .initialize(new BN(Math.floor(Math.random() * 5)), new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5))
         .accounts({ playerState: keypair.publicKey, user: provider.wallet.publicKey })
         .signers([keypair])
         .rpc()

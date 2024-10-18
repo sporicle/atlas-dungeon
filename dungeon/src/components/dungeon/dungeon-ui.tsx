@@ -3,6 +3,12 @@ import { useMemo } from 'react'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { ellipsify } from '../ui/ui-layout'
 import { useAtlasDungeonProgram, useAtlasDungeonProgramAccount } from './dungeon-data-access'
+import class0 from '../../assets/class-0.gif'
+import class1 from '../../assets/class-1.gif'
+import class2 from '../../assets/class-2.gif'
+import class3 from '../../assets/class-3.gif'
+
+const classImages = [class0, class1, class2, class3]
 
 export function AtlasDungeonCreate() {
   const { initialize } = useAtlasDungeonProgram()
@@ -36,7 +42,7 @@ export function AtlasDungeonList() {
       {accounts.isLoading ? (
         <span className="loading loading-spinner loading-lg"></span>
       ) : accounts.data?.length ? (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {accounts.data?.map((account) => (
             <AtlasDungeonCard key={account.publicKey.toString()} account={account.publicKey} />
           ))}
@@ -51,6 +57,25 @@ export function AtlasDungeonList() {
   )
 }
 
+function getClassImage(classNumber: number) {
+  return <img src={classImages[classNumber]} alt={`Class ${classNumber}`} className="w-24 h-24" />
+}
+
+function getClassName(classNumber: number) {
+  switch (classNumber) {
+    case 0:
+      return 'Mage'
+    case 1:
+      return 'Archer'
+    case 2:
+      return 'Knight'
+    case 3:
+      return 'Cleric'
+    case 4:
+      return 'Axeman'
+  }
+}
+
 function AtlasDungeonCard({ account }: { account: PublicKey }) {
   const { accountQuery, clickMutation } = useAtlasDungeonProgramAccount({
     account,
@@ -62,49 +87,33 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
   const dexterity = useMemo(() => accountQuery.data?.dexterity ?? 0, [accountQuery.data?.dexterity])
   const luck = useMemo(() => accountQuery.data?.luck ?? 0, [accountQuery.data?.luck])
   const playerClass = useMemo(() => accountQuery.data?.class ?? 0, [accountQuery.data?.class])
-console.log(accountQuery.data)
+
   return accountQuery.isLoading ? (
     <span className="loading loading-spinner loading-lg"></span>
   ) : (
-    <div className="card bg-base-200 shadow-xl">
-      <div className="card-body p-6">
-        <div className="flex flex-col items-center space-y-4">
-          <h2 className="card-title text-2xl font-bold">
-            Class {playerClass.toString()}
-          </h2>
-          <p className="text-xl font-semibold">{exp.toString()} EXP</p>
-          
-          <div className="flex justify-between w-full text-center">
-            <div>
-              <p className="text-sm font-medium">STR</p>
-              <p className="text-lg font-bold">{strength.toString()}</p>
-            </div>  
-            <div>
-              <p className="text-sm font-medium">INT</p>
-              <p className="text-lg font-bold">{intelligence.toString()}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">DEX</p>
-              <p className="text-lg font-bold">{dexterity.toString()}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">LCK</p>
-              <p className="text-lg font-bold">{luck.toString()}</p>
-            </div>
-          </div>
-
-          <button
-            className="btn btn-primary w-full"
-            onClick={() => clickMutation.mutateAsync()}
-            disabled={clickMutation.isPending}
-          >
-            Click {clickMutation.isPending && '...'}
-          </button>
-
-          <p className="text-sm">
-            <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
-          </p>
+    <div className="card bg-base-200 shadow-xl p-3 w-[250px]">
+      <div className="flex flex-col items-center">
+        {getClassImage(parseInt(playerClass.toString()))}
+        <h2 className="card-title text-lg font-bold mt-2">
+          {getClassName(parseInt(playerClass.toString()))}
+        </h2>
+        <p className="text-sm">{exp.toString()} EXP</p>
+        <div className="grid grid-cols-2 gap-x-4 text-sm mt-2">
+          <div>STR: {strength.toString()}</div>
+          <div>INT: {intelligence.toString()}</div>
+          <div>DEX: {dexterity.toString()}</div>
+          <div>LCK: {luck.toString()}</div>
         </div>
+        <button
+          className="btn btn-primary btn-sm mt-3 w-50%"
+          onClick={() => clickMutation.mutateAsync()}
+          disabled={clickMutation.isPending}
+        >
+          Train {clickMutation.isPending && '...'}
+        </button>
+        <p className="text-xs mt-2">
+          <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
+        </p>
       </div>
     </div>
   )
