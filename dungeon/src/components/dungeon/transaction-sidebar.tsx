@@ -19,7 +19,7 @@ export function TransactionSidebar() {
         <>
           <h2 className="text-xl font-bold mb-4 sticky top-0 bg-base-200 py-2 mt-4  ">Recent Transactions</h2>
           <div className="space-y-4">
-            {transactions.map((tx) => (
+            {transactions.map((tx) => ( 
               <div
                 key={tx.signature}
                 className={`card ${

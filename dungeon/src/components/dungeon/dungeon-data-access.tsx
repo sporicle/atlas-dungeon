@@ -23,12 +23,18 @@ export function useAtlasDungeonProgram() {
   const accounts = useQuery({
     queryKey: ['atlas-dungeon', 'all', { cluster }],
     queryFn: async () => {
-      if (cluster.network === ClusterNetwork.Atlas) {
+      // if (cluster.network === ClusterNetwork.Atlas) {
         const response = await connection.getProgramAccounts(programId, {
           filters: [
             {
-              dataSize: 88,
+              dataSize: 112,
             },
+            {
+              "memcmp": {
+                "offset": 8,
+                "bytes": provider.wallet.publicKey.toBase58()
+              }
+            }
           ],
         })
         return response.map(({ pubkey, account }) => {
@@ -50,10 +56,11 @@ export function useAtlasDungeonProgram() {
             account: decodedData,
           }
         })
-      } else {
-        return program.account.playerState.all()
-      }
-    },
+      } 
+      // else {
+      //   return program.account.playerState.all()
+      // }
+    // },
   })
 
   const getProgramAccount = useQuery({
