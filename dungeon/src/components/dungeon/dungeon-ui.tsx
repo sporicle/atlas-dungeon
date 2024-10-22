@@ -77,7 +77,7 @@ function getClassName(classNumber: number) {
 }
 
 function AtlasDungeonCard({ account }: { account: PublicKey }) {
-  const { accountQuery, clickMutation } = useAtlasDungeonProgramAccount({
+  const { accountQuery, clickMutation, staticWallet } = useAtlasDungeonProgramAccount({
     account,
   })
 

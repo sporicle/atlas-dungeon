@@ -5,36 +5,53 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { useMemo } from 'react'
 import toast from 'react-hot-toast'
-import { ClusterNetwork, useCluster } from '../cluster/cluster-data-access'
-import { useAnchorProvider } from '../solana/solana-provider'
+import {useCluster } from '../cluster/cluster-data-access'
 import { useTransactionToast } from '../ui/ui-layout'
 import { useTransactionContext } from './transaction-context'
-import { BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
+import bs58 from 'bs58'
 
 export function useAtlasDungeonProgram() {
   const { connection } = useConnection()
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
-  const provider = useAnchorProvider()
   const programId = useMemo(() => getAtlasDungeonProgramId(cluster.network as Cluster), [cluster])
-  const program = getAtlasDungeonProgram(provider)
   const { addTransaction } = useTransactionContext()
+
+  // Create a static wallet from the .env variable
+  const staticWallet = useMemo(() => {
+    const keypairBytes = bs58.decode(import.meta.env.VITE_STATIC_WALLET_KEYPAIR)
+    return Keypair.fromSecretKey(keypairBytes)
+  }, [])
+
+  const provider = useMemo(() => {
+    return new AnchorProvider(
+      connection,
+      {
+        publicKey: staticWallet.publicKey,
+        signTransaction: (tx) => Promise.resolve(tx),
+        signAllTransactions: (txs) => Promise.resolve(txs),
+      },
+      { commitment: 'confirmed' }
+    )
+  }, [connection, staticWallet])
+
+  const program = useMemo(() => getAtlasDungeonProgram(provider), [provider])
 
   const accounts = useQuery({
     queryKey: ['atlas-dungeon', 'all', { cluster }],
     queryFn: async () => {
-      // if (cluster.network === ClusterNetwork.Atlas) {
         const response = await connection.getProgramAccounts(programId, {
           filters: [
-            {
-              dataSize: 112,
-            },
-            {
-              "memcmp": {
-                "offset": 8,
-                "bytes": provider.wallet.publicKey.toBase58()
-              }
-            }
+            // {
+            //   // dataSize: 112,
+            // },
+            // {
+            //   "memcmp": {
+            //     "offset": 8,
+            //     "bytes": staticWallet.publicKey.toBase58()
+            //   }
+            // }
           ],
         })
         return response.map(({ pubkey, account }) => {
@@ -56,11 +73,7 @@ export function useAtlasDungeonProgram() {
             account: decodedData,
           }
         })
-      } 
-      // else {
-      //   return program.account.playerState.all()
-      // }
-    // },
+      }
   })
 
   const getProgramAccount = useQuery({
@@ -71,11 +84,21 @@ export function useAtlasDungeonProgram() {
   const initialize = useMutation({
     mutationKey: ['atlas-dungeon', 'initialize', { cluster }],
     mutationFn: async (keypair: Keypair) => {
-      const signature = await program.methods
+      const tx = await program.methods
         .initialize(new BN(Math.floor(Math.random() * 5)), new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5),new BN(Math.floor(Math.random() * 5)+5))
-        .accounts({ playerState: keypair.publicKey, user: provider.wallet.publicKey })
-        .signers([keypair])
-        .rpc()
+        .accounts({ playerState: keypair.publicKey, user: staticWallet.publicKey })
+        .signers([keypair, staticWallet])
+        .transaction()
+
+        tx.recentBlockhash = (await program.provider.connection.getLatestBlockhash()).blockhash
+        tx.feePayer = staticWallet.publicKey
+  
+        tx.partialSign(staticWallet)
+        tx.partialSign(keypair)
+        
+        const signature = await program.provider.connection.sendRawTransaction(tx.serialize())
+        await program.provider.connection.confirmTransaction(signature)
+  
       addTransaction(signature)
       return signature
     },
@@ -92,13 +115,14 @@ export function useAtlasDungeonProgram() {
     accounts,
     getProgramAccount,
     initialize,
+    staticWallet,
   }
 }
 
 export function useAtlasDungeonProgramAccount({ account }: { account: PublicKey }) {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
-  const { program, accounts } = useAtlasDungeonProgram()
+  const { program, staticWallet } = useAtlasDungeonProgram()
   const { addTransaction } = useTransactionContext()
 
   const accountQuery = useQuery({
@@ -109,7 +133,17 @@ export function useAtlasDungeonProgramAccount({ account }: { account: PublicKey 
   const clickMutation = useMutation({
     mutationKey: ['atlas-dungeon', 'click', { cluster, account }],
     mutationFn: async () => {
-      const signature = await program.methods.click().accounts({ playerState: account }).rpc()
+      const tx = await program.methods.click()
+        .accounts({ playerState: account })
+        .signers([staticWallet])
+        .transaction()
+      tx.recentBlockhash = (await program.provider.connection.getLatestBlockhash()).blockhash
+      tx.feePayer = staticWallet.publicKey
+
+      tx.sign(staticWallet)
+      const signature = await program.provider.connection.sendRawTransaction(tx.serialize())
+      await program.provider.connection.confirmTransaction(signature)
+
       addTransaction(signature)
       return signature
     },
@@ -122,5 +156,6 @@ export function useAtlasDungeonProgramAccount({ account }: { account: PublicKey 
   return {
     accountQuery,
     clickMutation,
+    staticWallet,
   }
 }
