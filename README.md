@@ -1,0 +1,6 @@
+add a .env file with the following:
+VITE_ATLAS_API_KEY=YOUR ATLAS API KEY
+VITE_STATIC_WALLET_KEYPAIR=KEYPAIR TO BE USED FOR QUICK SIGNING
+
+run with:
+npm run dev
