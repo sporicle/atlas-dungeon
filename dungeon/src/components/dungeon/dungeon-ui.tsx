@@ -249,8 +249,8 @@ function BattleArea({ accounts }: { accounts: PublicKey[] }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTotalGold(prevGold => prevGold + goldPerMinute / 240)
-    }, 250)
+      setTotalGold(prevGold => prevGold + goldPerMinute / (60*10))
+    }, 100)
 
     return () => clearInterval(interval)
   }, [goldPerMinute])
