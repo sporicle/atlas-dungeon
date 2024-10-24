@@ -241,7 +241,7 @@ function BattleArea({ accounts }: { accounts: PublicKey[] }) {
           totalStats += Number(accountQuery.data.luck ?? 0) + levelBonus;
         }
       }
-      setGoldPerMinute(totalStats)
+      setGoldPerMinute(totalStats*6+13)
     }
 
     calculateGoldPerMinute()
