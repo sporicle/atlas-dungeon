@@ -172,7 +172,7 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
           Train {clickMutation.isPending && '...'}
         </button>
         <p className="text-xs mt-2">
-          <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
+          <ExplorerLink path={`address/${account}`} label={ellipsify(account.toString())} />
         </p>
       </div>
     </div>

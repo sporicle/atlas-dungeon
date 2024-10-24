@@ -17,7 +17,7 @@ export default function DashboardFeature() {
         subtitle={''}
       >
         <p className="mb-6">
-          <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
+          <ExplorerLink path={`address/${programId}`} label={ellipsify(programId.toString())} />
         </p>
         <AtlasDungeonCreate />
       </AppHero>
