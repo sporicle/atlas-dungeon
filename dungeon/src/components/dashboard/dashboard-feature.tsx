@@ -11,19 +11,17 @@ export default function DashboardFeature() {
   const { programId } = useAtlasDungeonProgram()
 
   return publicKey ? (
-    <div className="flex">
-      <div className="flex-grow">
-        <AppHero
-          title="Atlas Dungeon"
-          subtitle={''}
-        >
-          <p className="mb-6">
-            <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
-          </p>
-          <AtlasDungeonCreate />
-        </AppHero>
-        <AtlasDungeonList />
-      </div>
+    <div className="container mx-auto px-4">
+      <AppHero
+        title="Atlas Dungeon"
+        subtitle={''}
+      >
+        <p className="mb-6">
+          <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
+        </p>
+        <AtlasDungeonCreate />
+      </AppHero>
+      <AtlasDungeonList />
       <TransactionSidebar />
     </div>
   ) : (

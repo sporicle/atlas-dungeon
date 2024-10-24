@@ -3,12 +3,23 @@ import { useMemo } from 'react'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { ellipsify } from '../ui/ui-layout'
 import { useAtlasDungeonProgram, useAtlasDungeonProgramAccount } from './dungeon-data-access'
-import class0 from '../../assets/class-0.gif'
-import class1 from '../../assets/class-1.gif'
-import class2 from '../../assets/class-2.gif'
-import class3 from '../../assets/class-3.gif'
+import class0 from '../../assets/chars/class-0.gif'
+import class1 from '../../assets/chars/class-1.gif'
+import class2 from '../../assets/chars/class-2.gif'
+import class3 from '../../assets/chars/class-3.gif'
+import class0Attack from '../../assets/chars/class-0-attack.gif'
+import class1Attack from '../../assets/chars/class-1-attack.gif'
+import class2Attack from '../../assets/chars/class-2-attack.gif'
+import class3Attack from '../../assets/chars/class-3-attack.gif'
+import monster0 from '../../assets/mons/mon-0.gif'
+import monster1 from '../../assets/mons/mon-1.gif'
+import monster2 from '../../assets/mons/mon-2.gif'
+import monster3 from '../../assets/mons/mon-2.gif'
+import bgImage from '../../assets/bg.png';
 
 const classImages = [class0, class1, class2, class3]
+const monsterImages = [monster0,monster1, monster2, monster3]
+const classAttackImages = [class0Attack, class1Attack, class2Attack, class3Attack]
 
 export function AtlasDungeonCreate() {
   const { initialize } = useAtlasDungeonProgram()
@@ -38,27 +49,40 @@ export function AtlasDungeonList() {
     )
   }
   return (
-    <div className={'space-y-6'}>
-      {accounts.isLoading ? (
-        <span className="loading loading-spinner loading-lg"></span>
-      ) : accounts.data?.length ? (
-        <div className="grid md:grid-cols-3 gap-4">
-          {accounts.data?.map((account) => (
-            <AtlasDungeonCard key={account.publicKey.toString()} account={account.publicKey} />
-          ))}
+    <div className="flex">
+      <div className="w-1/2 pr-4">
+        <div className="grid grid-cols-2 gap-4">
+          {accounts.isLoading ? (
+            <span className="loading loading-spinner loading-lg"></span>
+          ) : accounts.data?.length ? (
+            accounts.data?.map((account) => (
+              <AtlasDungeonCard key={account.publicKey.toString()} account={account.publicKey} />
+            ))
+          ) : (
+            <div className="col-span-2 text-center">
+              <h2 className="text-2xl">No players</h2>
+              No players found. Create one above to get started.
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="text-center">
-          <h2 className={'text-2xl'}>No players</h2>
-          No players found. Create one above to get started.
-        </div>
-      )}
+      </div>
+      <div className="w-1/2">
+        <BattleArea accounts={accounts.data?.map((account) => account.publicKey) || []} />
+      </div>
     </div>
   )
 }
 
 function getClassImage(classNumber: number) {
   return <img src={classImages[classNumber]} alt={`Class ${classNumber}`} className="w-24 h-24" />
+}
+
+function getClassAttackImage(classNumber: number) {
+  return <img src={classAttackImages[classNumber]} alt={`Class ${classNumber}`} className="w-24 h-24" />
+}
+
+function getMonsterImage(classNumber: number) {
+  return <img src={monsterImages[classNumber]} alt={`Class ${classNumber}`} className="w-24 h-24" />
 }
 
 function getClassName(classNumber: number) {
@@ -120,3 +144,64 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
 }
 
 export { AtlasDungeonCard }
+
+function BattleArea({ accounts }: { accounts: PublicKey[] }) {
+  const uniqueClasses = new Set<number>()
+  const playerCharacters: PublicKey[] = []
+  const monsterCharacters: PublicKey[] = []
+
+  // Try to select 3 unique classes for players
+  for (const account of accounts) {
+    if (playerCharacters.length < 3) {
+      const { accountQuery } = useAtlasDungeonProgramAccount({ account })
+      const playerClass = Number(accountQuery.data?.class ?? 0)
+      playerCharacters.push(account)
+      uniqueClasses.add(playerClass)
+      if (uniqueClasses.size === 3) break
+    }
+  }
+
+  // Fill remaining slots if needed
+  while (playerCharacters.length < 3 && accounts.length > playerCharacters.length) {
+    playerCharacters.push(accounts[playerCharacters.length])
+  }
+
+  // Select monsters (can be the same as players for now)
+  monsterCharacters.push(...playerCharacters.slice(0, 3))
+
+  return (
+    <div 
+      className="battle-area" 
+      style={{ 
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        width: '600px', 
+        height: '300px', 
+        position: 'relative',
+      }}
+    >
+      <div className="absolute left-0 bottom-0 w-2/5 h-full flex items-end justify-around">
+        {playerCharacters.map((publicKey, index) => (
+          <CharacterSprite key={index} account={{ publicKey }} />
+        ))}
+      </div>
+      <div className="absolute right-0 bottom-0 w-2/5 h-full flex items-end justify-around">
+        {monsterCharacters.map((publicKey, index) => (
+          <CharacterSprite key={index} account={{ publicKey }} isMonster={true} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CharacterSprite({ account, isMonster = false }: { account: { publicKey: PublicKey }, isMonster?: boolean }) {
+  const { accountQuery } = useAtlasDungeonProgramAccount({ account: account.publicKey })
+  const playerClass = useMemo(() => accountQuery.data?.class ?? 0, [accountQuery.data?.class])
+
+  return (
+    <div className={`w-24 h-24 ${isMonster ? 'transform scale-x-[-1]' : ''}`}>
+      {isMonster ? getMonsterImage(parseInt(playerClass.toString())) : getClassAttackImage(parseInt(playerClass.toString()))}
+    </div>
+  )
+}
