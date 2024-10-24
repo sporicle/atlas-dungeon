@@ -1,7 +1,10 @@
 {
   "dependencies": {
     "heroku": "^8.7.1",
-    "vite": "^5.1.4",
-    "node": "20.x"
+    "node": "20.x",
+    "vite": "^5.1.4"
+  },
+  "devDependencies": {
+    "@types/bs58": "^4.0.4"
   }
 }
