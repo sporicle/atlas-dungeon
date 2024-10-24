@@ -1,1 +1,1 @@
-web: cd dungeon && npm run dev
+web: cd dungeon && npm run start
