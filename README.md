@@ -7,5 +7,9 @@ VITE_STATIC_WALLET_KEYPAIR=KEYPAIR TO BE USED FOR QUICK SIGNING
 
 
 run with:
+
 cd dungeon
+
+npm install
+
 npm run dev
