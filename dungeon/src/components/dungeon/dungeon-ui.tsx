@@ -16,6 +16,7 @@ import monster1 from '../../assets/mons/mon-1.gif'
 import monster2 from '../../assets/mons/mon-2.gif'
 import monster3 from '../../assets/mons/mon-2.gif'
 import bgImage from '../../assets/bg.png';
+import { useState, useEffect } from 'react'
 
 const classImages = [class0, class1, class2, class3]
 const monsterImages = [monster0,monster1, monster2, monster3]
@@ -100,16 +101,40 @@ function getClassName(classNumber: number) {
   }
 }
 
+function calculateLevelAndProgress(exp: number): { level: number; progress: number; nextLevelExp: number } {
+  const levelThresholds = [0, 5, 10, 20, 40, 100];
+  let level = 0;
+  let nextLevelExp = levelThresholds[1];
+
+  for (let i = 1; i < levelThresholds.length; i++) {
+    if (exp >= levelThresholds[i]) {
+      level = i;
+    } else {
+      nextLevelExp = levelThresholds[i];
+      break;
+    }
+  }
+
+  const currentLevelExp = levelThresholds[level];
+  const progress = ((exp - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100;
+
+  return { level: level + 1, progress, nextLevelExp };
+}
+
 function AtlasDungeonCard({ account }: { account: PublicKey }) {
   const { accountQuery, clickMutation, staticWallet } = useAtlasDungeonProgramAccount({
     account,
   })
 
   const exp = useMemo(() => accountQuery.data?.experience ?? 0, [accountQuery.data?.experience])
-  const strength = useMemo(() => accountQuery.data?.strength ?? 0, [accountQuery.data?.strength])
-  const intelligence = useMemo(() => accountQuery.data?.intelligence ?? 0, [accountQuery.data?.intelligence])
-  const dexterity = useMemo(() => accountQuery.data?.dexterity ?? 0, [accountQuery.data?.dexterity])
-  const luck = useMemo(() => accountQuery.data?.luck ?? 0, [accountQuery.data?.luck])
+  const { level, progress, nextLevelExp } = useMemo(() => calculateLevelAndProgress(Number(exp)), [exp])
+
+  const levelBonus = useMemo(() => (level - 1) * 2, [level]); // 2 points per level, starting from level 2
+
+  const strength = useMemo(() => Number(accountQuery.data?.strength ?? 0) + levelBonus, [accountQuery.data?.strength, levelBonus])
+  const intelligence = useMemo(() => Number(accountQuery.data?.intelligence ?? 0) + levelBonus, [accountQuery.data?.intelligence, levelBonus])
+  const dexterity = useMemo(() => Number(accountQuery.data?.dexterity ?? 0) + levelBonus, [accountQuery.data?.dexterity, levelBonus])
+  const luck = useMemo(() => Number(accountQuery.data?.luck ?? 0) + levelBonus, [accountQuery.data?.luck, levelBonus])
   const playerClass = useMemo(() => accountQuery.data?.class ?? 0, [accountQuery.data?.class])
 
   return accountQuery.isLoading ? (
@@ -121,7 +146,18 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
         <h2 className="card-title text-lg font-bold mt-2">
           {getClassName(parseInt(playerClass.toString()))}
         </h2>
-        <p className="text-sm">{exp.toString()} EXP</p>
+        <div className="w-full mt-2 flex items-center">
+          <span className="text-sm font-bold mr-2 w-1/5">Lvl {level}</span>
+          <div className="w-3/5 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 relative group">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full"
+              style={{ width: `${progress}%` }}
+            ></div>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-1">
+              {Number(exp)}/{nextLevelExp} EXP
+            </div>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-x-4 text-sm mt-2">
           <div>STR: {strength.toString()}</div>
           <div>INT: {intelligence.toString()}</div>
@@ -145,51 +181,106 @@ function AtlasDungeonCard({ account }: { account: PublicKey }) {
 
 export { AtlasDungeonCard }
 
+function GoldInfoCard({ totalGold, goldPerMinute }: { totalGold: number; goldPerMinute: number }) {
+  return (
+    <div className="card bg-base-200 shadow-xl p-3 w-[750px]">
+      <div className="flex flex-col items-center">
+        <div className="grid grid-cols-4 gap-x-4 text-sm mt-2 w-full">
+          <div className="font-bold">Gold:</div>
+          <div>{Math.floor(totalGold)}</div>
+          <div className="font-bold">Gold/min:</div>
+          <div>{goldPerMinute}</div>
+        </div>
+        <div className="text-xs mt-2 text-center">
+          Gold/minute is calculated based on the stats of your party.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BattleArea({ accounts }: { accounts: PublicKey[] }) {
-  const uniqueClasses = new Set<number>()
-  const playerCharacters: PublicKey[] = []
-  const monsterCharacters: PublicKey[] = []
+  const [playerCharacters, setPlayerCharacters] = useState<PublicKey[]>([])
+  const [goldPerMinute, setGoldPerMinute] = useState(0)
+  const [totalGold, setTotalGold] = useState(0)
 
-  // Try to select 3 unique classes for players
-  for (const account of accounts) {
-    if (playerCharacters.length < 3) {
-      const { accountQuery } = useAtlasDungeonProgramAccount({ account })
-      const playerClass = Number(accountQuery.data?.class ?? 0)
-      playerCharacters.push(account)
-      uniqueClasses.add(playerClass)
-      if (uniqueClasses.size === 3) break
+  // Use the hook for each account
+  const accountData = accounts.map(account => useAtlasDungeonProgramAccount({ account }))
+
+  useEffect(() => {
+    const uniqueClasses = new Set<number>()
+    const selectedPlayers: PublicKey[] = []
+
+    // Try to select 3 unique classes for players
+    for (const account of accounts) {
+      if (selectedPlayers.length < 3) {
+        selectedPlayers.push(account)
+        if (uniqueClasses.size === 3) break
+      }
     }
-  }
 
-  // Fill remaining slots if needed
-  while (playerCharacters.length < 3 && accounts.length > playerCharacters.length) {
-    playerCharacters.push(accounts[playerCharacters.length])
-  }
+    // Fill remaining slots if needed
+    while (selectedPlayers.length < 3 && accounts.length > selectedPlayers.length) {
+      selectedPlayers.push(accounts[selectedPlayers.length])
+    }
 
-  // Select monsters (can be the same as players for now)
-  monsterCharacters.push(...playerCharacters.slice(0, 3))
+    setPlayerCharacters(selectedPlayers)
+  }, [accounts])
+
+  useEffect(() => {
+    const calculateGoldPerMinute = () => {
+      let totalStats = 0
+      for (const { accountQuery } of accountData) {
+        if (accountQuery.data) {
+          const { level } = calculateLevelAndProgress(Number(accountQuery.data.experience ?? 0));
+          const levelBonus = (level - 1) * 2; // 2 points per level, starting from level 2
+          
+          totalStats += Number(accountQuery.data.strength ?? 0) + levelBonus;
+          totalStats += Number(accountQuery.data.intelligence ?? 0) + levelBonus;
+          totalStats += Number(accountQuery.data.dexterity ?? 0) + levelBonus;
+          totalStats += Number(accountQuery.data.luck ?? 0) + levelBonus;
+        }
+      }
+      setGoldPerMinute(totalStats)
+    }
+
+    calculateGoldPerMinute()
+  }, [accountData])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTotalGold(prevGold => prevGold + goldPerMinute / 240)
+    }, 250)
+
+    return () => clearInterval(interval)
+  }, [goldPerMinute])
 
   return (
-    <div 
-      className="battle-area" 
-      style={{ 
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        width: '600px', 
-        height: '300px', 
-        position: 'relative',
-      }}
-    >
-      <div className="absolute left-0 bottom-0 w-2/5 h-full flex items-end justify-around">
-        {playerCharacters.map((publicKey, index) => (
-          <CharacterSprite key={index} account={{ publicKey }} />
-        ))}
+    <div>
+      <div 
+        className="battle-area" 
+        style={{ 
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          width: '600px', 
+          height: '300px', 
+          position: 'relative',
+        }}
+      >
+        <div className="absolute left-0 bottom-0 w-2/5 h-full flex items-end justify-around">
+          {playerCharacters.map((publicKey, index) => (
+            <CharacterSprite key={index} account={{ publicKey }} />
+          ))}
+        </div>
+        <div className="absolute right-0 bottom-0 w-2/5 h-full flex items-end justify-around">
+          {playerCharacters.map((publicKey, index) => (
+            <CharacterSprite key={index} account={{ publicKey }} isMonster={true} />
+          ))}
+        </div>
       </div>
-      <div className="absolute right-0 bottom-0 w-2/5 h-full flex items-end justify-around">
-        {monsterCharacters.map((publicKey, index) => (
-          <CharacterSprite key={index} account={{ publicKey }} isMonster={true} />
-        ))}
+      <div className="mt-4 flex justify-center">
+        <GoldInfoCard totalGold={totalGold} goldPerMinute={goldPerMinute} />
       </div>
     </div>
   )
