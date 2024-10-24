@@ -204,8 +204,8 @@ function BattleArea({ accounts }: { accounts: PublicKey[] }) {
   const [goldPerMinute, setGoldPerMinute] = useState(0)
   const [totalGold, setTotalGold] = useState(0)
 
-  // Use the hook for each account
-  const accountData = accounts.map(account => useAtlasDungeonProgramAccount({ account }))
+  // Use the hook for each account, but add a null check
+  const accountData = accounts.map(account => useAtlasDungeonProgramAccount({ account })).filter(Boolean)
 
   useEffect(() => {
     const uniqueClasses = new Set<number>()
